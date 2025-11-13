@@ -308,6 +308,20 @@
             border: 1px solid #b8daff;
             display: block;
         }
+        .navigation-links {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            font-size: 14px;
+        }
+        .navigation-links a {
+            color: #007bff;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .navigation-links a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -411,6 +425,12 @@
     <div class="submit-section no-print">
         <button class="submit-btn" onclick="submitInvoice()">Submit Invoice to Orthopedic Consultancy, LLC</button>
         <div id="status-message" class="status-message"></div>
+    </div>
+
+    <div class="navigation-links no-print">
+        <a href="./mobile-invoice.html">Switch to Mobile Version</a>
+        |
+        <a href="./index.html">Return to Home</a>
     </div>
 
     <script>

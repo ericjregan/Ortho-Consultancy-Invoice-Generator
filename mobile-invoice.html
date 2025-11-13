@@ -299,6 +299,16 @@
             </div>
             
             <div class="form-group">
+                <label>Claimant Name <span class="required">*</span></label>
+                <input type="text" id="claimant-name" placeholder="John Smith" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Law Firm <span class="required">*</span></label>
+                <input type="text" id="law-firm" placeholder="Smith & Associates" required>
+            </div>
+            
+            <div class="form-group">
                 <label>Payment Terms (Days)</label>
                 <input type="number" id="payment-terms" value="30">
             </div>
@@ -316,7 +326,9 @@
         </div>
 
         <div class="desktop-link">
-            <a href="desktop-invoice.html">Switch to Desktop Version</a>
+            <a href="./desktop-invoice.html">Switch to Desktop Version</a>
+            |
+            <a href="./index.html">Return to Home</a>
         </div>
     </div>
 
@@ -346,6 +358,7 @@
             // Add event listeners for invoice number generation
             document.getElementById('provider-first-name').addEventListener('input', generateInvoiceNumber);
             document.getElementById('provider-last-name').addEventListener('input', generateInvoiceNumber);
+            document.getElementById('claimant-name').addEventListener('input', generateInvoiceNumber);
         });
 
         function addService() {
@@ -365,16 +378,6 @@
                 <div class="form-group">
                     <label>Service Date <span class="required">*</span></label>
                     <input type="date" class="service-date" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Claimant Name <span class="required">*</span></label>
-                    <input type="text" class="claimant-name" oninput="generateInvoiceNumber()" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Law Firm <span class="required">*</span></label>
-                    <input type="text" class="law-firm" required>
                 </div>
                 
                 <div class="form-group">
@@ -463,8 +466,7 @@
         function generateInvoiceNumber() {
             const firstName = document.getElementById('provider-first-name').value;
             const lastName = document.getElementById('provider-last-name').value;
-            const firstClaimant = document.querySelector('.claimant-name');
-            const claimantName = firstClaimant ? firstClaimant.value : '';
+            const claimantName = document.getElementById('claimant-name').value;
             
             if (lastName && claimantName) {
                 const date = new Date();
@@ -485,6 +487,8 @@
             const city = document.getElementById('provider-city').value.trim();
             const state = document.getElementById('provider-state').value.trim();
             const zip = document.getElementById('provider-zip').value.trim();
+            const claimantName = document.getElementById('claimant-name').value.trim();
+            const lawFirm = document.getElementById('law-firm').value.trim();
             
             const errors = [];
             
@@ -495,6 +499,8 @@
             if (!city) errors.push('City');
             if (!state) errors.push('State');
             if (!zip) errors.push('ZIP Code');
+            if (!claimantName) errors.push('Claimant Name');
+            if (!lawFirm) errors.push('Law Firm');
             
             // Validate email format
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -527,8 +533,6 @@
                 
                 services.push({
                     date: card.querySelector('.service-date').value,
-                    claimant: card.querySelector('.claimant-name').value,
-                    lawFirm: card.querySelector('.law-firm').value,
                     serviceType: selectedOption.text,
                     hours: card.querySelector('.hours').value || '-',
                     rate: card.querySelector('.rate').value || '-',
@@ -546,6 +550,8 @@
                 providerAddressState: document.getElementById('provider-state').value,
                 providerAddressZip: document.getElementById('provider-zip').value,
                 providerEmail: document.getElementById('provider-email').value,
+                claimantName: document.getElementById('claimant-name').value,
+                lawFirm: document.getElementById('law-firm').value,
                 services: services,
                 subtotal: document.getElementById('total').textContent,
                 total: document.getElementById('total').textContent,

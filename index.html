@@ -1,17 +1,120 @@
-<!-- index.html -->
-<script>
-    // Check if mobile
-    if (window.innerWidth < 768) {
-        window.location.href = 'mobile-invoice.html';
-    } else {
-        window.location.href = 'desktop-invoice.html';
-    }
-</script>
-```
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator - Orthopedic Consultancy</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f5f5f5;
+        }
+        .loading {
+            text-align: center;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .message {
+            color: #666;
+            font-size: 16px;
+        }
+        .manual-links {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .manual-links a {
+            display: block;
+            margin: 10px 0;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .manual-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading">
+        <div class="spinner"></div>
+        <div class="message">Detecting device type...</div>
+        
+        <div class="manual-links">
+            <p>Or choose manually:</p>
+            <a href="mobile-invoice.html">Mobile Version</a>
+            <a href="desktop-invoice.html">Desktop Version</a>
+        </div>
+    </div>
 
-## File Structure:
-```
-Your GitHub Repository/
-├── index.html (detector/router)
-├── desktop-invoice.html (your current version)
-└── mobile-invoice.html (new mobile version)
+    <script>
+        // Function to detect if device is mobile
+        function isMobile() {
+            // Check screen width
+            if (window.innerWidth <= 768) {
+                return true;
+            }
+            
+            // Check for touch capability
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                // But exclude tablets with larger screens
+                if (window.innerWidth <= 1024) {
+                    return true;
+                }
+            }
+            
+            // Check user agent for mobile devices
+            const userAgent = navigator.userAgent.toLowerCase();
+            const mobileKeywords = ['android', 'webos', 'iphone', 'ipad', 'ipod', 'blackberry', 'windows phone'];
+            
+            for (let keyword of mobileKeywords) {
+                if (userAgent.includes(keyword)) {
+                    // iPad check - newer iPads might want desktop
+                    if (keyword === 'ipad' && window.innerWidth > 1024) {
+                        return false;
+                    }
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        // Function to redirect to appropriate version
+        function redirectToVersion() {
+            // Check if user has a saved preference
+            const savedPreference = localStorage.getItem('invoiceVersionPreference');
+            
+            if (savedPreference) {
+                window.location.href = savedPreference === 'mobile' ? 'mobile-invoice.html' : 'desktop-invoice.html';
+                return;
+            }
+            
+            // Otherwise detect device
+            if (isMobile()) {
+                window.location.href = 'mobile-invoice.html';
+            } else {
+                window.location.href = 'desktop-invoice.html';
+            }
+        }
+        
+        // Wait a moment to show the loading screen, then redirect
+        setTimeout(redirectToVersion, 1000);
+    </script>
+</body>
+</html>

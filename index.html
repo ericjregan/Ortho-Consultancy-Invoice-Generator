@@ -44,9 +44,20 @@
             margin: 10px 0;
             color: #007bff;
             text-decoration: none;
+            padding: 10px 20px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            transition: all 0.3s ease;
         }
         .manual-links a:hover {
-            text-decoration: underline;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+        }
+        .error-message {
+            color: #dc3545;
+            margin-top: 20px;
+            display: none;
         }
     </style>
 </head>
@@ -57,12 +68,24 @@
         
         <div class="manual-links">
             <p>Or choose manually:</p>
-            <a href="mobile-invoice.html">Mobile Version</a>
-            <a href="desktop-invoice.html">Desktop Version</a>
+            <a href="./mobile-invoice.html" onclick="savePreference('mobile')">Mobile Version</a>
+            <a href="./desktop-invoice.html" onclick="savePreference('desktop')">Desktop Version</a>
+        </div>
+        
+        <div class="error-message" id="error-message">
+            If automatic redirect fails, please select your version above.
         </div>
     </div>
-
     <script>
+        // Function to save preference
+        function savePreference(version) {
+            try {
+                localStorage.setItem('invoiceVersionPreference', version);
+            } catch(e) {
+                console.log('Could not save preference:', e);
+            }
+        }
+        
         // Function to detect if device is mobile
         function isMobile() {
             // Check screen width
@@ -97,19 +120,25 @@
         
         // Function to redirect to appropriate version
         function redirectToVersion() {
-            // Check if user has a saved preference
-            const savedPreference = localStorage.getItem('invoiceVersionPreference');
-            
-            if (savedPreference) {
-                window.location.href = savedPreference === 'mobile' ? 'mobile-invoice.html' : 'desktop-invoice.html';
-                return;
-            }
-            
-            // Otherwise detect device
-            if (isMobile()) {
-                window.location.href = 'mobile-invoice.html';
-            } else {
-                window.location.href = 'desktop-invoice.html';
+            try {
+                // Check if user has a saved preference
+                const savedPreference = localStorage.getItem('invoiceVersionPreference');
+                
+                if (savedPreference) {
+                    window.location.href = savedPreference === 'mobile' ? './mobile-invoice.html' : './desktop-invoice.html';
+                    return;
+                }
+                
+                // Otherwise detect device
+                if (isMobile()) {
+                    window.location.href = './mobile-invoice.html';
+                } else {
+                    window.location.href = './desktop-invoice.html';
+                }
+            } catch(e) {
+                // If redirect fails, show error message
+                document.getElementById('error-message').style.display = 'block';
+                console.error('Redirect failed:', e);
             }
         }
         

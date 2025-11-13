@@ -36,9 +36,10 @@
                 font-size: 11px !important;
             }
             
-            /* Hide less critical columns on mobile */
-            .hours, .rate {
-                display: none;
+            /* Make the table scrollable horizontally on mobile */
+            .table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
             }
             
             /* Make form fields stack vertically */
@@ -343,17 +344,8 @@
         <div class="info-line">Shawnee, KS 66226</div>
 
         <div class="section-title">Services</div>
-        <div class="mobile-note no-print" style="display: none; color: #666; font-size: 12px; margin-bottom: 10px; font-style: italic;">
-            Note: On mobile, enter hours and rates in the service notes if needed.
-        </div>
-        <style>
-            @media screen and (max-width: 768px) {
-                .mobile-note {
-                    display: block !important;
-                }
-            }
-        </style>
-        <table id="servicesTable">
+        <div class="table-wrapper">
+            <table id="servicesTable">
             <thead>
                 <tr>
                     <th style="width: 12%;">Date</th>
@@ -391,6 +383,7 @@
                 </tr>
             </tbody>
         </table>
+        </div>
         <button class="add-row-btn no-print" onclick="addRow()">+ Add Row</button>
 
         <div class="total-section">

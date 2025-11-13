@@ -173,6 +173,13 @@
             margin: 3px 0;
             font-size: 14px;
         }
+        .case-info-box {
+            background: #f0f7ff;
+            border: 1px solid #cce0ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -331,7 +338,8 @@
     </div>
 
     <div class="instructions no-print">
-        <strong>Instructions:</strong> Select service type from dropdown. Fill in all required fields.
+        <strong>Instructions:</strong> Fill in provider and case information. Select service types from dropdown. 
+        All services on this invoice will be for the same claimant and law firm.
         When complete, click "Submit Invoice" at the bottom to send the invoice to Orthopedic Consultancy, LLC.
     </div>
 
@@ -357,26 +365,28 @@
         <div class="info-line">22052 W 66th St #132</div>
         <div class="info-line">Shawnee, KS 66226</div>
 
+        <div class="case-info-box">
+            <div class="section-title" style="margin-top: 0;">Case Information</div>
+            <div class="info-line">Claimant Name: <span class="editable" id="claimant-name" contenteditable="true" style="min-width: 250px;"></span> <span style="color: red;">*</span></div>
+            <div class="info-line">Law Firm: <span class="editable" id="law-firm" contenteditable="true" style="min-width: 250px;"></span> <span style="color: red;">*</span></div>
+        </div>
+
         <div class="section-title">Services</div>
         <div class="table-wrapper">
             <table id="servicesTable">
             <thead>
                 <tr>
-                    <th style="width: 12%;">Date</th>
-                    <th style="width: 20%;">Claimant Name</th>
-                    <th style="width: 20%;">Law Firm</th>
-                    <th style="width: 18%;">Service Type</th>
-                    <th class="hours" style="width: 8%;">Hours</th>
-                    <th class="rate" style="width: 10%;">Rate</th>
-                    <th class="amount" style="width: 10%;">Amount</th>
-                    <th class="no-print" style="width: 2%;">Action</th>
+                    <th style="width: 15%;">Date</th>
+                    <th style="width: 35%;">Service Type</th>
+                    <th class="hours" style="width: 12%;">Hours</th>
+                    <th class="rate" style="width: 15%;">Rate</th>
+                    <th class="amount" style="width: 18%;">Amount</th>
+                    <th class="no-print" style="width: 5%;">Action</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
                 <tr>
                     <td><input type="date" class="service-date" /></td>
-                    <td><span class="editable claimant-name" contenteditable="true"></span></td>
-                    <td><span class="editable law-firm" contenteditable="true"></span></td>
                     <td>
                         <select class="service-type" onchange="updateServiceType(this)">
                             <option value="">-- Select Service --</option>
@@ -442,8 +452,6 @@
             const newRow = document.createElement('tr');
             newRow.innerHTML = `
                 <td><input type="date" class="service-date" /></td>
-                <td><span class="editable claimant-name" contenteditable="true"></span></td>
-                <td><span class="editable law-firm" contenteditable="true"></span></td>
                 <td>
                     <select class="service-type" onchange="updateServiceType(this)">
                         <option value="">-- Select Service --</option>
@@ -596,8 +604,6 @@
                 
                 const service = {
                     date: row.querySelector('.service-date').value || 'Not specified',
-                    claimant: row.querySelector('.claimant-name').textContent,
-                    lawFirm: row.querySelector('.law-firm').textContent,
                     serviceType: row.querySelector('.service-type').options[row.querySelector('.service-type').selectedIndex].text,
                     hours: row.querySelector('.hours-field').textContent,
                     rate: rateText === '-' ? '-' : unformatNumber(rateText),
@@ -616,6 +622,8 @@
                 providerAddressState: document.getElementById('provider-address-state').textContent,
                 providerAddressZip: document.getElementById('provider-address-zip').textContent,
                 providerEmail: document.getElementById('provider-email').textContent,
+                claimantName: document.getElementById('claimant-name').textContent,
+                lawFirm: document.getElementById('law-firm').textContent,
                 services: services,
                 subtotal: unformatNumber(document.getElementById('subtotal').textContent),
                 total: unformatNumber(document.getElementById('total').textContent),
@@ -637,6 +645,8 @@
             const state = document.getElementById('provider-address-state').textContent.trim();
             const zip = document.getElementById('provider-address-zip').textContent.trim();
             const email = document.getElementById('provider-email').textContent.trim();
+            const claimantName = document.getElementById('claimant-name').textContent.trim();
+            const lawFirm = document.getElementById('law-firm').textContent.trim();
             
             const errors = [];
             
@@ -662,6 +672,12 @@
                 errors.push('Provider Email');
             } else if (!validateEmail(email)) {
                 errors.push('Valid Email Address (must be in format: name@domain.com)');
+            }
+            if (!claimantName || claimantName === '') {
+                errors.push('Claimant Name');
+            }
+            if (!lawFirm || lawFirm === '') {
+                errors.push('Law Firm');
             }
             
             return errors;
@@ -762,13 +778,8 @@
             document.getElementById('provider-first-name').addEventListener('input', generateInvoiceNumber);
             document.getElementById('provider-last-name').addEventListener('blur', generateInvoiceNumber);
             document.getElementById('provider-last-name').addEventListener('input', generateInvoiceNumber);
-            
-            // Add event listener to generate invoice number when claimant names are changed
-            document.addEventListener('input', function(e) {
-                if (e.target.classList.contains('claimant-name')) {
-                    generateInvoiceNumber();
-                }
-            });
+            document.getElementById('claimant-name').addEventListener('blur', generateInvoiceNumber);
+            document.getElementById('claimant-name').addEventListener('input', generateInvoiceNumber);
         });
         
         function initAutocomplete() {
@@ -823,10 +834,9 @@
         function generateInvoiceNumber() {
             const firstName = document.getElementById('provider-first-name').textContent.trim();
             const lastName = document.getElementById('provider-last-name').textContent.trim();
-            const firstClaimant = document.querySelector('.claimant-name');
-            const claimantName = firstClaimant ? firstClaimant.textContent.trim() : '';
+            const claimantName = document.getElementById('claimant-name').textContent.trim();
             
-            // Only generate if we have provider name and at least one claimant
+            // Only generate if we have provider name and claimant
             if (lastName && lastName !== '' && 
                 claimantName && claimantName !== '') {
                 

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IME Provider Invoice</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDjuVFlq2HuntyyaIXy4953qeq7XelYlCk&libraries=places"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 25px;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .header h1 {
+                font-size: 24px !important;
+            }
+            
+            table {
+                font-size: 11px;
+            }
+            
+            th, td {
+                padding: 5px !important;
+                font-size: 11px !important;
+            }
+            
+            /* Hide less critical columns on mobile */
+            .hours, .rate {
+                display: none;
+            }
+            
+            /* Make form fields stack vertically */
+            .info-line {
+                display: flex;
+                flex-direction: column;
+                margin-bottom: 10px;
+            }
+            
+            .editable, input[type="text"], input[type="date"] {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+                margin-top: 5px;
+            }
+            
+            /* Adjust logo and title for mobile */
+            img {
+                max-width: 150px !important;
+            }
+            
+            h1[style*="font-size: 48px"] {
+                font-size: 32px !important;
+            }
+            
+            /* Make submit button full width */
+            .submit-btn {
+                width: 100%;
+            }
+            
+            /* Adjust total section */
+            .total-section {
+                max-width: 100%;
+                margin-left: 0;
+            }
+            
+            /* Service type dropdown */
+            select {
+                font-size: 12px;
+            }
+            
+            /* Instructions box */
+            .instructions {
+                font-size: 12px;
+                padding: 8px;
+            }
+        }
+        
+        /* Tablet adjustments */
+        @media screen and (max-width: 1024px) and (min-width: 769px) {
+            body {
+                padding: 15px;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            .editable, input[type="text"] {
+                min-width: 100px;
+            }
+        }
+        
+        @media print {
+            .editable { background-color: white; border-bottom: none; }
+            .no-print { display: none !important; }
+            .delete-btn { display: none !important; }
+            .submit-section { display: none !important; }
+            select { 
+                border: none; 
+                -webkit-appearance: none; 
+                -moz-appearance: none; 
+                appearance: none;
+                background: white;
+            }
+        }
+        .editable {
+            border-bottom: 1px solid #ccc;
+            padding: 2px;
+            display: inline-block;
+            min-width: 140px;
+            background-color: #f9f9f9;
+        }
+        input[type="date"] {
+            border: none;
+            border-bottom: 1px solid #ccc;
+            padding: 2px 4px;
+            background-color: #f9f9f9;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #333;
+        }
+        input[type="date"]:focus {
+            outline: none;
+            border-bottom: 2px solid #007bff;
+        }
+        .editable.small {
+            min-width: 60px;
+        }
+        .disabled {
+            background-color: #e9ecef;
+            color: #6c757d;
+            border-bottom: 1px solid #dee2e6;
+        }
+        select {
+            padding: 3px;
+            border: 1px solid #ccc;
+            background-color: white;
+            font-size: 13px;
+            width: 100%;
+        }
+        .header {
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        .invoice-title {
+            font-size: 30px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+        .section-title {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 13px;
+            margin: 20px 0 8px;
+            letter-spacing: 0.5px;
+        }
+        .info-line {
+            margin: 3px 0;
+            font-size: 14px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th {
+            background: #f0f0f0;
+            padding: 10px;
+            border-bottom: 2px solid #333;
+            text-align: left;
+            font-size: 13px;
+        }
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-size: 13px;
+            position: relative;
+        }
+        .amount, .rate, .hours {
+            text-align: right;
+            white-space: nowrap;
+        }
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        .add-row-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .add-row-btn:hover {
+            background: #218838;
+        }
+        .total-section {
+            margin-top: 25px;
+            border-top: 2px solid #333;
+            padding-top: 15px;
+            max-width: 300px;
+            margin-left: auto;
+            font-size: 14px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        .grand-total {
+            font-weight: bold;
+            font-size: 18px;
+            border-top: 1px solid #333;
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+        .payment-terms {
+            background: #f7f7f7;
+            padding: 15px;
+            margin-top: 30px;
+            border-left: 4px solid #333;
+            font-size: 13px;
+        }
+        .footer {
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+            font-size: 12px;
+            color: #777;
+        }
+        .instructions {
+            background: #e8f4f8;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 13px;
+            border-left: 4px solid #007bff;
+        }
+        .submit-section {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .submit-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .submit-btn:hover {
+            background: #0056b3;
+        }
+        .submit-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-message.loading {
+            background: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="font-family: 'Lato', sans-serif; font-weight: 300; font-size: 48px; color: #808080; margin: 0;">Invoice Generator</h1>
+    </div>
+
+    <div class="instructions no-print">
+        <strong>Instructions:</strong> Select service type from dropdown. Fill in all required fields.
+        When complete, click "Submit Invoice" at the bottom to send the invoice to Orthopedic Consultancy, LLC.
+    </div>
+
+    <div id="invoice-content">
+        <div class="header">
+            <h1 class="invoice-title">INVOICE</h1>
+            <div>Invoice #: <span id="invoice-number" style="font-weight: bold;">Complete form to generate invoice number</span></div>
+            <div>Date: <input type="date" id="invoice-date" value="" /></div>
+        </div>
+
+        <div class="section-title">Provider Information <span style="color: red; font-size: 11px; font-weight: normal;">(All fields required)</span></div>
+        <div class="info-line">First Name: <span class="editable" id="provider-first-name" contenteditable="true"></span> <span style="color: red;">*</span></div>
+        <div class="info-line">Last Name: <span class="editable" id="provider-last-name" contenteditable="true"></span> <span style="color: red;">*</span></div>
+        <div class="info-line">Street Address: <input type="text" id="provider-address-street" class="editable" style="width: 400px; background-color: #f9f9f9;" placeholder="Start typing address..." /> <span style="color: red;">*</span></div>
+        <div class="info-line">City: <span class="editable" id="provider-address-city" contenteditable="true"></span> <span style="color: red;">*</span></div>
+        <div class="info-line">State: <span class="editable" id="provider-address-state" contenteditable="true" style="min-width: 50px;"></span> <span style="color: red;">*</span>
+            ZIP: <span class="editable" id="provider-address-zip" contenteditable="true" style="min-width: 80px;"></span> <span style="color: red;">*</span></div>
+        <div class="info-line">Email: <span class="editable" id="provider-email" contenteditable="true" style="min-width: 250px;"></span> <span style="color: red;">*</span></div>
+
+        <div class="section-title">Bill To</div>
+        <div class="info-line">Orthopedic Consultancy, LLC</div>
+        <div class="info-line">Attn: Accounts Payable</div>
+        <div class="info-line">22052 W 66th St #132</div>
+        <div class="info-line">Shawnee, KS 66226</div>
+
+        <div class="section-title">Services</div>
+        <div class="mobile-note no-print" style="display: none; color: #666; font-size: 12px; margin-bottom: 10px; font-style: italic;">
+            Note: On mobile, enter hours and rates in the service notes if needed.
+        </div>
+        <style>
+            @media screen and (max-width: 768px) {
+                .mobile-note {
+                    display: block !important;
+                }
+            }
+        </style>
+        <table id="servicesTable">
+            <thead>
+                <tr>
+                    <th style="width: 12%;">Date</th>
+                    <th style="width: 20%;">Claimant Name</th>
+                    <th style="width: 20%;">Law Firm</th>
+                    <th style="width: 18%;">Service Type</th>
+                    <th class="hours" style="width: 8%;">Hours</th>
+                    <th class="rate" style="width: 10%;">Rate</th>
+                    <th class="amount" style="width: 10%;">Amount</th>
+                    <th class="no-print" style="width: 2%;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr>
+                    <td><input type="date" class="service-date" /></td>
+                    <td><span class="editable claimant-name" contenteditable="true"></span></td>
+                    <td><span class="editable law-firm" contenteditable="true"></span></td>
+                    <td>
+                        <select class="service-type" onchange="updateServiceType(this)">
+                            <option value="">-- Select Service --</option>
+                            <option value="ime-flat">IME + Report</option>
+                            <option value="supplemental-flat">Supplemental Report</option>
+                            <option value="records-hourly">Records Review</option>
+                            <option value="deposition-hourly">Deposition</option>
+                            <option value="conference-hourly">Conference/Meeting</option>
+                            <option value="addendum-hourly">Addendum</option>
+                            <option value="other-flat">Other Service</option>
+                            <option value="custom">Custom Entry</option>
+                        </select>
+                    </td>
+                    <td class="hours"><span class="editable small hours-field disabled" contenteditable="false">-</span></td>
+                    <td class="rate">$<span class="editable small rate-field disabled" contenteditable="false">-</span></td>
+                    <td class="amount">$<span class="editable small amount-field" contenteditable="true" onblur="calculateTotal()">0.00</span></td>
+                    <td class="no-print"><button class="delete-btn" onclick="deleteRow(this)">X</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="add-row-btn no-print" onclick="addRow()">+ Add Row</button>
+
+        <div class="total-section">
+            <div class="total-row">
+                <div>Subtotal</div>
+                <div>$<span id="subtotal">0.00</span></div>
+            </div>
+            <div class="total-row grand-total">
+                <div>Total Amount Due</div>
+                <div>$<span id="total">0.00</span></div>
+            </div>
+        </div>
+
+        <div class="payment-terms">
+            <strong>Payment Terms:</strong><br>
+            Payment is due within <span class="editable" id="payment-terms" contenteditable="true">30</span> days.  
+            Please reference the invoice number and claimant name on all correspondence.
+        </div>
+
+        <div class="footer">
+            This invoice is for Independent Medical Examination (IME) services performed as an independent contractor for Orthopedic Consultancy, LLC.
+        </div>
+    </div>
+
+    <div class="submit-section no-print">
+        <button class="submit-btn" onclick="submitInvoice()">Submit Invoice to Orthopedic Consultancy, LLC</button>
+        <div id="status-message" class="status-message"></div>
+    </div>
+
+    <script>
+        // REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGfa00U2ewclnceG5GYcPrbRUJZGtTyYco3n74giohd3YFplggxkF9QLhXBy_MfcbNEQ/exec';
+
+        function addRow() {
+            const tableBody = document.getElementById('tableBody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="date" class="service-date" /></td>
+                <td><span class="editable claimant-name" contenteditable="true"></span></td>
+                <td><span class="editable law-firm" contenteditable="true"></span></td>
+                <td>
+                    <select class="service-type" onchange="updateServiceType(this)">
+                        <option value="">-- Select Service --</option>
+                        <option value="ime-flat">IME + Report</option>
+                        <option value="supplemental-flat">Supplemental Report</option>
+                        <option value="records-hourly">Records Review</option>
+                        <option value="deposition-hourly">Deposition</option>
+                        <option value="conference-hourly">Conference/Meeting</option>
+                        <option value="addendum-hourly">Addendum</option>
+                        <option value="other-flat">Other Service</option>
+                        <option value="custom">Custom Entry</option>
+                    </select>
+                </td>
+                <td class="hours"><span class="editable small hours-field disabled" contenteditable="false">-</span></td>
+                <td class="rate">$<span class="editable small rate-field disabled" contenteditable="false">-</span></td>
+                <td class="amount">$<span class="editable small amount-field" contenteditable="true" onblur="calculateTotal()">0.00</span></td>
+                <td class="no-print"><button class="delete-btn" onclick="deleteRow(this)">X</button></td>
+            `;
+            tableBody.appendChild(newRow);
+        }
+
+        function updateServiceType(selectElement) {
+            const row = selectElement.closest('tr');
+            const serviceType = selectElement.value;
+            const hoursField = row.querySelector('.hours-field');
+            const rateField = row.querySelector('.rate-field');
+            const amountField = row.querySelector('.amount-field');
+            
+            if (serviceType.includes('hourly')) {
+                hoursField.contentEditable = 'true';
+                hoursField.classList.remove('disabled');
+                hoursField.textContent = '';
+                hoursField.onblur = function() { calculateHourlyAmount(this); };
+                
+                rateField.contentEditable = 'true';
+                rateField.classList.remove('disabled');
+                rateField.textContent = '';
+                rateField.onblur = function() { calculateHourlyAmount(this); };
+                
+                amountField.contentEditable = 'false';
+                amountField.classList.add('disabled');
+            } else if (serviceType.includes('flat')) {
+                hoursField.contentEditable = 'false';
+                hoursField.classList.add('disabled');
+                hoursField.textContent = '-';
+                
+                rateField.contentEditable = 'false';
+                rateField.classList.add('disabled');
+                rateField.textContent = '-';
+                
+                amountField.contentEditable = 'true';
+                amountField.classList.remove('disabled');
+            } else if (serviceType === 'custom') {
+                hoursField.contentEditable = 'true';
+                hoursField.classList.remove('disabled');
+                hoursField.textContent = '';
+                hoursField.onblur = function() { calculateHourlyAmount(this); };
+                
+                rateField.contentEditable = 'true';
+                rateField.classList.remove('disabled');
+                rateField.textContent = '';
+                rateField.onblur = function() { calculateHourlyAmount(this); };
+                
+                amountField.contentEditable = 'true';
+                amountField.classList.remove('disabled');
+            } else {
+                hoursField.contentEditable = 'false';
+                hoursField.classList.add('disabled');
+                hoursField.textContent = '-';
+                
+                rateField.contentEditable = 'false';
+                rateField.classList.add('disabled');
+                rateField.textContent = '-';
+                
+                amountField.contentEditable = 'true';
+                amountField.classList.remove('disabled');
+            }
+        }
+
+        function formatNumber(num) {
+            const number = parseFloat(num.toString().replace(/[^0-9.-]/g, '')) || 0;
+            return number.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+        
+        function unformatNumber(str) {
+            return str.toString().replace(/[^0-9.-]/g, '');
+        }
+        
+        function calculateHourlyAmount(element) {
+            const row = element.closest('tr');
+            const hoursField = row.querySelector('.hours-field');
+            const rateField = row.querySelector('.rate-field');
+            const amountField = row.querySelector('.amount-field');
+            
+            const hours = parseFloat(hoursField.textContent) || 0;
+            const rate = parseFloat(unformatNumber(rateField.textContent)) || 0;
+            
+            if (hours > 0 && rate > 0) {
+                const calculatedAmount = hours * rate;
+                amountField.textContent = formatNumber(calculatedAmount);
+                calculateTotal();
+            }
+        }
+
+        function deleteRow(btn) {
+            const row = btn.parentNode.parentNode;
+            const tableBody = document.getElementById('tableBody');
+            if (tableBody.children.length > 1) {
+                row.remove();
+                calculateTotal();
+            } else {
+                alert('You must have at least one service line.');
+            }
+        }
+
+        function calculateTotal() {
+            const amountFields = document.querySelectorAll('.amount-field');
+            let total = 0;
+            
+            amountFields.forEach(field => {
+                const value = parseFloat(unformatNumber(field.textContent)) || 0;
+                total += value;
+            });
+            
+            document.getElementById('subtotal').textContent = formatNumber(total);
+            document.getElementById('total').textContent = formatNumber(total);
+        }
+        
+        document.addEventListener('blur', function(e) {
+            if (e.target.classList.contains('amount-field') && !e.target.classList.contains('disabled')) {
+                const value = parseFloat(unformatNumber(e.target.textContent)) || 0;
+                e.target.textContent = formatNumber(value);
+                calculateTotal();
+            }
+            if (e.target.classList.contains('rate-field') && !e.target.classList.contains('disabled')) {
+                const value = parseFloat(unformatNumber(e.target.textContent)) || 0;
+                if (value > 0) {
+                    e.target.textContent = value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                }
+            }
+        }, true);
+
+        function collectInvoiceData() {
+            const services = [];
+            const rows = document.querySelectorAll('#tableBody tr');
+            
+            rows.forEach(row => {
+                const amountText = row.querySelector('.amount-field').textContent;
+                const rateText = row.querySelector('.rate-field').textContent;
+                
+                const service = {
+                    date: row.querySelector('.service-date').value || 'Not specified',
+                    claimant: row.querySelector('.claimant-name').textContent,
+                    lawFirm: row.querySelector('.law-firm').textContent,
+                    serviceType: row.querySelector('.service-type').options[row.querySelector('.service-type').selectedIndex].text,
+                    hours: row.querySelector('.hours-field').textContent,
+                    rate: rateText === '-' ? '-' : unformatNumber(rateText),
+                    amount: unformatNumber(amountText)
+                };
+                services.push(service);
+            });
+            
+            return {
+                invoiceNumber: document.getElementById('invoice-number').textContent,
+                invoiceDate: document.getElementById('invoice-date').value || 'Not specified',
+                providerFirstName: document.getElementById('provider-first-name').textContent,
+                providerLastName: document.getElementById('provider-last-name').textContent,
+                providerAddressStreet: document.getElementById('provider-address-street').value,
+                providerAddressCity: document.getElementById('provider-address-city').textContent,
+                providerAddressState: document.getElementById('provider-address-state').textContent,
+                providerAddressZip: document.getElementById('provider-address-zip').textContent,
+                providerEmail: document.getElementById('provider-email').textContent,
+                services: services,
+                subtotal: unformatNumber(document.getElementById('subtotal').textContent),
+                total: unformatNumber(document.getElementById('total').textContent),
+                paymentTerms: document.getElementById('payment-terms').textContent,
+                htmlContent: document.getElementById('invoice-content').innerHTML
+            };
+        }
+
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function validateProvider() {
+            const firstName = document.getElementById('provider-first-name').textContent.trim();
+            const lastName = document.getElementById('provider-last-name').textContent.trim();
+            const street = document.getElementById('provider-address-street').value.trim();
+            const city = document.getElementById('provider-address-city').textContent.trim();
+            const state = document.getElementById('provider-address-state').textContent.trim();
+            const zip = document.getElementById('provider-address-zip').textContent.trim();
+            const email = document.getElementById('provider-email').textContent.trim();
+            
+            const errors = [];
+            
+            if (!firstName || firstName === '') {
+                errors.push('Provider First Name');
+            }
+            if (!lastName || lastName === '') {
+                errors.push('Provider Last Name');
+            }
+            if (!street || street === '') {
+                errors.push('Provider Street Address');
+            }
+            if (!city || city === '') {
+                errors.push('Provider City');
+            }
+            if (!state || state === '') {
+                errors.push('Provider State');
+            }
+            if (!zip || zip === '') {
+                errors.push('Provider ZIP Code');
+            }
+            if (!email || email === '') {
+                errors.push('Provider Email');
+            } else if (!validateEmail(email)) {
+                errors.push('Valid Email Address (must be in format: name@domain.com)');
+            }
+            
+            return errors;
+        }
+
+        function submitInvoice() {
+            const submitBtn = document.querySelector('.submit-btn');
+            const statusMessage = document.getElementById('status-message');
+            
+            const validationErrors = validateProvider();
+            
+            if (validationErrors.length > 0) {
+                statusMessage.className = 'status-message error';
+                statusMessage.style.display = 'block';
+                statusMessage.innerHTML = '<strong>Please complete the following required fields:</strong><br>' + 
+                                        validationErrors.join('<br>');
+                return;
+            }
+            
+            const services = document.querySelectorAll('.service-type');
+            let hasValidService = false;
+            services.forEach(service => {
+                if (service.value && service.value !== '') {
+                    hasValidService = true;
+                }
+            });
+            
+            if (!hasValidService) {
+                statusMessage.className = 'status-message error';
+                statusMessage.style.display = 'block';
+                statusMessage.textContent = 'Please add at least one service to the invoice.';
+                return;
+            }
+            
+            const total = parseFloat(unformatNumber(document.getElementById('total').textContent)) || 0;
+            if (total <= 0) {
+                statusMessage.className = 'status-message error';
+                statusMessage.style.display = 'block';
+                statusMessage.textContent = 'Invoice total must be greater than $0.00';
+                return;
+            }
+            
+            if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                statusMessage.className = 'status-message error';
+                statusMessage.style.display = 'block';
+                statusMessage.textContent = 'Error: Google Apps Script URL not configured. Please contact administrator.';
+                return;
+            }
+            
+            const invoiceData = collectInvoiceData();
+            
+            submitBtn.disabled = true;
+            statusMessage.className = 'status-message loading';
+            statusMessage.style.display = 'block';
+            statusMessage.textContent = 'Submitting invoice...';
+            
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(invoiceData)
+            })
+            .then(() => {
+                statusMessage.className = 'status-message success';
+                statusMessage.innerHTML = `Invoice submitted successfully!<br>
+                                         A confirmation email with PDF has been sent to: <strong>${invoiceData.providerEmail}</strong>`;
+                submitBtn.disabled = false;
+                
+                setTimeout(() => {
+                    if (confirm('Invoice submitted. Would you like to create a new invoice?')) {
+                        location.reload();
+                    }
+                }, 5000);
+            })
+            .catch(error => {
+                statusMessage.className = 'status-message error';
+                statusMessage.textContent = 'Error submitting invoice. Please try again or email directly.';
+                submitBtn.disabled = false;
+                console.error('Error:', error);
+            });
+        }
+
+        // Calculate total on page load and set today's date
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateTotal();
+            
+            // Set today's date as default for invoice date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('invoice-date').value = today;
+            
+            // Initialize Google Places Autocomplete
+            initAutocomplete();
+            
+            // Add event listeners for invoice number generation
+            document.getElementById('provider-first-name').addEventListener('blur', generateInvoiceNumber);
+            document.getElementById('provider-first-name').addEventListener('input', generateInvoiceNumber);
+            document.getElementById('provider-last-name').addEventListener('blur', generateInvoiceNumber);
+            document.getElementById('provider-last-name').addEventListener('input', generateInvoiceNumber);
+            
+            // Add event listener to generate invoice number when claimant names are changed
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('claimant-name')) {
+                    generateInvoiceNumber();
+                }
+            });
+        });
+        
+        function initAutocomplete() {
+            const addressInput = document.getElementById('provider-address-street');
+            
+            // Create autocomplete object
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: 'us' },
+                fields: ['formatted_address', 'address_components']
+            });
+            
+            // When user selects an address
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                if (place.address_components) {
+                    // Parse the address components
+                    let streetNumber = '';
+                    let streetName = '';
+                    let city = '';
+                    let state = '';
+                    let zip = '';
+                    
+                    place.address_components.forEach(component => {
+                        const types = component.types;
+                        if (types.includes('street_number')) {
+                            streetNumber = component.long_name;
+                        }
+                        if (types.includes('route')) {
+                            streetName = component.long_name;
+                        }
+                        if (types.includes('locality')) {
+                            city = component.long_name;
+                        }
+                        if (types.includes('administrative_area_level_1')) {
+                            state = component.short_name;
+                        }
+                        if (types.includes('postal_code')) {
+                            zip = component.long_name;
+                        }
+                    });
+                    
+                    // Fill in the fields
+                    addressInput.value = streetNumber + ' ' + streetName;
+                    document.getElementById('provider-address-city').textContent = city;
+                    document.getElementById('provider-address-state').textContent = state;
+                    document.getElementById('provider-address-zip').textContent = zip;
+                }
+            });
+        }
+        
+        function generateInvoiceNumber() {
+            const firstName = document.getElementById('provider-first-name').textContent.trim();
+            const lastName = document.getElementById('provider-last-name').textContent.trim();
+            const firstClaimant = document.querySelector('.claimant-name');
+            const claimantName = firstClaimant ? firstClaimant.textContent.trim() : '';
+            
+            // Only generate if we have provider name and at least one claimant
+            if (lastName && lastName !== '' && 
+                claimantName && claimantName !== '') {
+                
+                const date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                
+                // Use last name for provider
+                const providerPart = lastName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 15).toUpperCase();
+                const claimantPart = extractNamePart(claimantName);
+                
+                // Format: INV-YYYYMMDD-ProviderLastName-ClaimantLastName
+                const invoiceNumber = `INV-${year}${month}${day}-${providerPart}-${claimantPart}`;
+                document.getElementById('invoice-number').textContent = invoiceNumber;
+            }
+        }
+        
+        function extractNamePart(fullName) {
+            // Remove titles like Dr., MD, etc.
+            let cleanName = fullName.replace(/^(Dr\.|Mr\.|Ms\.|Mrs\.)\s*/i, '').replace(/,?\s*(MD|DO|PhD)$/i, '');
+            
+            // Split the name into parts
+            const parts = cleanName.split(' ').filter(part => part.length > 0);
+            
+            if (parts.length === 0) return 'XX';
+            
+            // Try to get the last name (last part)
+            const lastName = parts[parts.length - 1];
+            
+            // Remove non-alphanumeric characters and capitalize
+            return lastName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 15).toUpperCase();
+        }
+    </script>
+
+</body>
+</html>

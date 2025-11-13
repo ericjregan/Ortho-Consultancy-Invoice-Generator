@@ -1,0 +1,17 @@
+<!-- index.html -->
+<script>
+    // Check if mobile
+    if (window.innerWidth < 768) {
+        window.location.href = 'mobile-invoice.html';
+    } else {
+        window.location.href = 'desktop-invoice.html';
+    }
+</script>
+```
+
+## File Structure:
+```
+Your GitHub Repository/
+├── index.html (detector/router)
+├── desktop-invoice.html (your current version)
+└── mobile-invoice.html (new mobile version)
